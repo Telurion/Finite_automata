@@ -27,13 +27,13 @@ def split_string(s):
     return count, values
 
 def get_info(infos) :
-    nb_letters = int(infos[0])
-    nb_states = int(infos[1])
+    nb_letters = infos[0]
+    nb_states = infos[1]
     nb_entry, pos_entry = split_string(infos[2])
     nb_terminal, pos_terminal = split_string(infos[3])
-    nb_transitions = int(infos[4])
+    nb_transitions = infos[4]
     list_transitions = infos[5:]
-    return nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions
+    return int(nb_letters), int(nb_states), int(nb_entry), pos_entry, int(nb_terminal), pos_terminal, int(nb_transitions), list_transitions
 
 def print_fa_info(file):
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = get_info(read_fa(file))
@@ -63,21 +63,25 @@ def create_fa_table(fa_info):
 
     table_state = is_deterministic(fa_info)
 
-    for state in range(nb_states):
+    states = [str(state) for state in range(nb_states)]
+    if "i" in pos_entry:
+        states.insert(0, "i")
+
+    for state in states:
         row = []
-        if state in pos_entry and state not in pos_terminal:
+        if state in map(str, pos_entry) and state not in map(str, pos_terminal):
             row.append("E")
-        elif state in pos_terminal and state not in pos_entry:
+        elif state in map(str, pos_terminal) and state not in map(str, pos_entry):
             row.append("T")
-        elif state in pos_entry and state in pos_terminal:
+        elif state in map(str, pos_entry) and state in map(str, pos_terminal):
             row.append("E / T")
         else:
             row.append("")
 
-        row.append(str(state))
+        row.append(state)
 
         for letter in range(nb_letters):
-            temp = [transition[2:] for transition in list_transitions if int(transition[0]) == state and transition[1] == alphabet[letter]]
+            temp = [transition[2:] for transition in list_transitions if transition[0] == str(state) and transition[1] == alphabet[letter]]
             if table_state :
                 row.append(", ".join(temp) if temp else "P")
             else :
@@ -109,7 +113,7 @@ def is_deterministic(fa_info):
 
     for state in range(nb_states):
         for letter in range(nb_letters):
-            transition_count = sum(1 for transition in list_transitions if int(transition[0]) == state and transition[1] == alphabet[letter])
+            transition_count = sum(1 for transition in list_transitions if transition[0] == str(state) and transition[1] == alphabet[letter])
             if transition_count > 1:
                 print(f"Not deterministic: State {state} has {transition_count} transitions on symbol '{alphabet[letter]}'.")
                 return False
@@ -119,7 +123,7 @@ def is_complete(fa_info):
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
     for state in range(nb_states):
         for letter in range(nb_letters):
-            if not any(int(transition[0]) == state and transition[1] == alphabet[letter] for transition in list_transitions):
+            if not any(transition[0] == str(state) and transition[1] == alphabet[letter] for transition in list_transitions):
                 print(f"Not complete: Missing transition from state {state} with letter '{alphabet[letter]}'")
                 return False
     return True
@@ -132,7 +136,6 @@ def check_standard(fa_info):
         state = False
     for i in range(nb_transitions):
         if int(list_transitions[i][2]) in pos_entry:
-            #if list_transitions[i][0] != list_transitions[i][2]: # not sure if the entry loops on itself
             state, temp = False, True
     if temp:
         print("Not standard : There are some states that have a path leading to the entry state.")
@@ -155,7 +158,6 @@ def standardization(fa_info):
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
 
     new_initial_state = "i"
-    nb_new_states = nb_states + 1
     list_new_transitions = []
 
     for state_entry in pos_entry:
@@ -165,16 +167,24 @@ def standardization(fa_info):
     
     for i in list_transitions:
         list_new_transitions.append(i)
+
+    nb_new_states = nb_states + 1
     nb_new_transitions = len(list_new_transitions)
 
     return nb_letters, nb_new_states, 1, [new_initial_state], nb_terminal, pos_terminal, nb_new_transitions, list_new_transitions
+
+
 
 ### **Usage**
 file = "1.txt"
 fa_info = get_info(read_fa(file))
 standardized_fa_info = standardization(fa_info)
 table = create_fa_table(fa_info)
+standardized_table = create_fa_table(standardized_fa_info)
 
 print_fa_info(file)
 print_fa_table(table)
 print_fa_status(fa_info)
+
+print(standardized_fa_info)
+print_fa_table(standardized_table)
