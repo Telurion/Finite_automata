@@ -61,7 +61,6 @@ def create_fa_table(fa_info):
     col_list = ["", "States"] + alphabet[:nb_letters]
     myTable = PrettyTable(col_list)
 
-    table_state = is_deterministic(fa_info)
 
     states = [str(state) for state in range(nb_states)]
     if "i" in pos_entry:
@@ -82,17 +81,8 @@ def create_fa_table(fa_info):
 
         for letter in range(nb_letters):
             temp = [transition[2:] for transition in list_transitions if transition[0] == str(state) and transition[1] == alphabet[letter]]
-            if table_state :
-                row.append(", ".join(temp) if temp else "P")
-            else :
-                row.append(", ".join(temp) if temp else "-")
+            row.append(", ".join(temp) if temp else "-")
 
-        myTable.add_row(row)
-    
-    if table_state:
-        row = ["", "P"]
-        for elem in range(nb_letters):
-            row.append("P")
         myTable.add_row(row)
 
     return myTable
@@ -144,12 +134,12 @@ def check_standard(fa_info):
 def print_fa_status(fa_info):
     if is_deterministic(fa_info):
         print("The FA is deterministic.")
-
     if is_complete(fa_info):
         print("The FA is complete.")
-
     if check_standard(fa_info):
         print("The FA is standard.")
+        
+    print("-" * 40)
 
 
 
@@ -173,7 +163,8 @@ def standardization(fa_info):
 
     return nb_letters, nb_new_states, 1, [new_initial_state], nb_terminal, pos_terminal, nb_new_transitions, list_new_transitions
 
-
+def completion(fa_info):
+    pass
 
 ### **Usage**
 file = "1.txt"
@@ -186,5 +177,4 @@ print_fa_info(file)
 print_fa_table(table)
 print_fa_status(fa_info)
 
-print(standardized_fa_info)
 print_fa_table(standardized_table)
