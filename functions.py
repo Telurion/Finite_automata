@@ -152,7 +152,7 @@ def standardization(fa_info):
 
     for state_entry in pos_entry:
         for transition in list_transitions:
-            if int(transition[0]) == state_entry:
+            if (transition[0] == str(state_entry)) and (new_initial_state + transition[1:] not in list_new_transitions) :
                 list_new_transitions.append((new_initial_state + transition[1:]))
     
     for i in list_transitions:
@@ -167,7 +167,7 @@ def completion(fa_info):
     pass
 
 ### **Usage**
-file = "1.txt"
+file = "./automatas/36.txt"
 fa_info = get_info(read_fa(file))
 standardized_fa_info = standardization(fa_info)
 table = create_fa_table(fa_info)
