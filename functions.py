@@ -102,21 +102,23 @@ def is_deterministic(fa_info):
         print("Some of your transition are multiple times in the file")
 
     for state in range(nb_states):
+        determinize = True
         for letter in range(nb_letters):
             transition_count = sum(1 for transition in list_transitions if transition[0] == str(state) and transition[1] == alphabet[letter])
             if transition_count > 1:
                 print(f"Not deterministic: State {state} has {transition_count} transitions on symbol '{alphabet[letter]}'.")
-                return False
-    return True
+                determinize = False
+    return determinize
 
 def is_complete(fa_info):
+    complete = True
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
     for state in range(nb_states):
         for letter in range(nb_letters):
             if not any(transition[0] == str(state) and transition[1] == alphabet[letter] for transition in list_transitions):
                 print(f"Not complete: Missing transition from state {state} with letter '{alphabet[letter]}'")
-                return False
-    return True
+                complete = False
+    return complete
 
 def check_standard(fa_info):
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
@@ -164,10 +166,76 @@ def standardization(fa_info):
     return nb_letters, nb_new_states, 1, [new_initial_state], nb_terminal, pos_terminal, nb_new_transitions, list_new_transitions
 
 def completion(fa_info):
-    pass
+    if not is_complete(fa_info):
+        nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
+        nb_states +=1 #rajout de l'état P
+        #rajout de ses transitions
+        for i in range(nb_letters):
+            transition = f"P{alphabet[i]}P"
+            list_transitions.append(transition)
+            nb_transitions +=1
+        #rajout des transitions incomplete
+        for state in range(nb_states-1): #on doit soutraire 1 car sinon cela rajoute un état indésirable 
+            for letter in range(nb_letters):
+                if not any(transition[0] == str(state) and transition[1] == alphabet[letter] for transition in list_transitions):
+                    list_transitions.append(f"{state}{alphabet[letter]}P")
+                    nb_transitions+=1
+        for transition in list_transitions:
+            print(f"  - {transition}")
+        print("-" * 40)
+        print_fa_table(create_fa_table(fa_info))
+    else :
+        print("your table is already completed ^^")
+
+def determinization_and_completion(fa_info):
+    if is_complete(fa_info) and is_deterministic(fa_info):
+        print("your automata is already deterministic and complete")
+    else:
+        if is_deterministic(fa_info):
+            print("your automata is now completed")
+            completion(fa_info)
+        if is_complete(fa_info):
+            determiniaztion(fa_info)
+        else:
+            completion(fa_info)
+            determiniaztion(fa_info)
+
+def determiniaztion(fa_info):
+    if not is_deterministic(fa_info):
+        nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
+        new_nb_states = 0
+        new_nb_entry = 1
+        new_pos_entry = []
+        new_nb_terminal = 0
+        new_pos_terminal = []
+        new_nb_transitions = 0
+        new_list_transitions = []
+        if (nb_entry > 1):
+            entry=""
+            for i in pos_entry:
+                entry +=str(i)
+            new_pos_entry.append(entry)
+        else:
+            new_pos_entry = pos_entry
+        new_nb_states +=1
+
+        transition_int = []
+        for state in new_pos_entry[0]:
+            for transition in list_transitions:
+                if state == transition[0]:
+                    for letter in range(nb_letters):
+                        if transition[1] == alphabet[letter] and transition[2:] not in a:
+                            a.append(transition[2:])
+                        
+                    
+        if a != [] and b != [] :
+            new_list_transitions.append(f"{new_pos_entry[0]}a{trans_a}")
+            new_list_transitions.append(f"{new_pos_entry[0]}b{trans_b}")
+        for i in new_list_transitions:
+            print(i)
 
 ### **Usage**
-file = "./automatas/36.txt"
+file = "./automatas/39.txt"
 fa_info = get_info(read_fa(file))
 standardized_fa_info = standardization(fa_info)
 table = create_fa_table(fa_info)
