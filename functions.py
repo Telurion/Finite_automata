@@ -234,6 +234,43 @@ def determiniaztion(fa_info):
         for i in new_list_transitions:
             print(i)
 
+def recognize_word(fa_info, word):
+ 
+    nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
+
+    # Convert current states -> into strings
+    current_states = [str(state) for state in pos_entry]
+
+    # Travel the word
+    for letter in word:
+        next_states = []
+        for state in current_states:
+            for transition in list_transitions:
+                if transition[0] == state and transition[1] == letter:
+                    if transition[2:] not in next_states:
+                        next_states.append(transition[2:])  
+        if not next_states:
+            return False
+
+        current_states = next_states
+    #check if final states
+    return any(state in [str(s) for s in pos_terminal] for state in current_states)
+
+
+def test_recognize_word(fa_info):
+    print("\n Type a word to test (or type 'end') :")
+
+    while True:
+        word = input() # read the word
+        if word.lower() == "end":
+            break
+
+        if recognize_word(fa_info, word):
+            print(f"Yes, '{word}' is recognizable by the automata")
+        else:
+            print(f"No, '{word}' is not recognizable by the automata")
+
+
 ### **Usage**
 file = "./automatas/39.txt"
 fa_info = get_info(read_fa(file))
@@ -246,3 +283,4 @@ print_fa_table(table)
 print_fa_status(fa_info)
 
 print_fa_table(standardized_table)
+test_recognize_word(fa_info)
