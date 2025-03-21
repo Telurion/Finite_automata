@@ -234,6 +234,80 @@ def determiniaztion(fa_info):
         for i in new_list_transitions:
             print(i)
 
+def int_to_roman(num):
+    roman_numerals = {
+        1000: "M", 900: "CM", 500: "D", 400: "CD",
+        100: "C", 90: "XC", 50: "L", 40: "XL",
+        10: "X", 9: "IX", 5: "V", 4: "IV", 1: "I"
+    }
+
+    roman_string = ""
+
+    for value, symbol in roman_numerals.items():
+        while num >= value:
+            roman_string += symbol
+            num -= value  # Reduce the number
+
+    return roman_string
+
+def minimization(cdfa_info):
+    nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = cdfa_info
+    t = []
+    nt = []
+
+    # filling of the terminal and non-terminal lists
+    for state in nb_states:
+        if str(state) in map(str, pos_terminal):
+            t.append(state)
+        else:
+            nt.append(state)
+
+    term_info = []
+    non_term_info = []
+    partition_table = []
+
+    # creating transition lists to partition further
+    for state in t:
+        term_info.append([state])
+        for transition in list_transitions:
+            if state == transition[0]:
+                if transition[2:] in t:
+                    term_info[-1].extend([str(transition[2:]), "t"])
+                else:
+                    term_info[-1].extend([str(transition[2:]), "nt"])
+    partition_table.append(term_info)
+
+    for state in nt:
+        non_term_info.append([state])
+        for transition in list_transitions:
+            if state == transition[0]:
+                if transition[2:] in t:
+                    non_term_info[-1].extend([str(transition[2:]), "t"])
+                else:
+                    non_term_info[-1].extend([str(transition[2:]), "nt"])
+    partition_table.append(non_term_info)
+
+    final_partition = []
+
+    for table in partition_table: #study of each table to create the final repartition
+        final_partition.append([str(int_to_roman(len(final_partition)+1)), "", ""])
+        for state in table:
+            for partition in final_partition:
+                if state[2]+state[4] in partition:
+                    partition[1] += state[0]
+                else:
+                    if state == table[0]:
+                        partition[1] = state[0]
+                        partition[2] = state[2]+state[4]
+                    else :
+                        final_partition.append([str(int_to_roman(len(final_partition) + 1)), state[0], state[2] + state[4]])
+
+    return final_partition
+
+
+
+
+
 def recognize_word(fa_info, word):
  
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
