@@ -10,7 +10,7 @@ def list_automata_files():
         files_txt.sort()
         return files_txt
     except Exception as e:
-        print(f"Error reading automatas folder: {e}")
+        print(f"Error reading automatas folder : {e}")
         return []
 
 def choose_automaton():
@@ -18,12 +18,9 @@ def choose_automaton():
     if not files:
         print("No automata files found in ./automatas/")
         return None
-    print("\nAvailable automata files:")
-    for idx, file in enumerate(files):
-        print(f"{idx + 1}. {file}")    #print numeroted list
     while True:
         try:
-            choice = int(input("\nWhich FA do you want to use? (Enter number between 01 and 44): "))
+            choice = int(input("\nWhich FA do you want to use? (Enter number between 01 and 44) : "))
             if 1 <= choice <= len(files):
                 return os.path.join("./automatas", files[choice - 1])
             else:
@@ -49,7 +46,7 @@ def main_menu():
             print("7. Test word recognition")
             print("8. Choose another FA")
             print("0. Exit")
-            choice = input("Enter your choice:")
+            choice = input("Enter your choice : ")
 
             if choice == "1":
                 print_fa_info(file_path)
@@ -67,7 +64,7 @@ def main_menu():
                 print("Now the automaton is determinized and completed.")
                 print_fa_table(create_fa_table(fa_info))
             elif choice == "6":
-                print("Minimization result:")
+                print("Minimization result : ")
                 partitions = minimization(fa_info)
                 for part in partitions:
                     print(part)
