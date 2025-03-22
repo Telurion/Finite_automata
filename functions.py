@@ -418,30 +418,56 @@ def minimization(cdfa_info):
     return final_partition
 
 
+def epsilon_closure(states, list_transitions, letters):
+    """ Returns the set of all states reachable from 'states' using only epsilon transitions. """
+    closure = set(states)
+    stack = list(states)  # Stack for DFS traversal
 
+    while stack:
+        state = stack.pop()
+        for transition in list_transitions:
+            placeOfLetter = 0
+            while transition[placeOfLetter] not in letters:
+                placeOfLetter += 1
+            source_state = transition[:placeOfLetter]
+            letter = transition[placeOfLetter]
+            dest_state = transition[placeOfLetter + 1:]
+
+            if source_state in closure and letter == 'ε' and dest_state not in closure:
+                closure.add(dest_state)
+                stack.append(dest_state)
+
+    return closure
 
 
 def recognize_word(fa_info, word):
- 
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
 
-    # Convert current states -> into strings
-    current_states = [str(state) for state in pos_entry]
+    states = States(fa_info)
+    letters = Letters(fa_info)
 
-    # Travel the word
+    current_states = set(str(state) for state in pos_entry)
+    current_states = epsilon_closure(current_states, list_transitions, letters)
+
     for letter in word:
-        next_states = []
+        next_states = set()
         for state in current_states:
             for transition in list_transitions:
-                if transition[0] == state and transition[1] == letter:
-                    if transition[2:] not in next_states:
-                        next_states.append(transition[2:])  
-        if not next_states:
+                placeOfLetter = 0
+                while transition[placeOfLetter] not in letters:
+                    placeOfLetter += 1
+                source_state = transition[:placeOfLetter]
+                transition_letter = transition[placeOfLetter]
+                dest_state = transition[placeOfLetter + 1:]
+
+                if transition_letter == letter and source_state in current_states:
+                    next_states.add(dest_state)
+
+        if not next_states: 
             return False
 
-        current_states = next_states
-    #check if final states
-    return any(state in [str(s) for s in pos_terminal] for state in current_states)
+        current_states = epsilon_closure(next_states, list_transitions, letters)
+    return any(state in map(str, pos_terminal) for state in current_states)
 
 
 def test_recognize_word(fa_info):
@@ -459,7 +485,24 @@ def test_recognize_word(fa_info):
         else:
             print(f"NO '{word}' is not recognizable by the automata")
 
+def complementary_automaton(fa_info):
+    nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
+    new_nb_terminal = nb_states - nb_terminal
+    new_pos_terminal = []
+    for state in range(nb_states):
+        if state not in pos_terminal:
+            new_pos_terminal.append(state)
+    return nb_letters, nb_states, nb_entry, pos_entry, new_nb_terminal, new_pos_terminal, nb_transitions, list_transitions
 
+def complementary(fa_info):
+    new_fa_info = complementary_automaton(fa_info)
+    table = create_fa_table(new_fa_info)
+    print_fa_table(table)
+
+    try:
+        test_recognize_word(new_fa_info)
+    except:
+        pass
 
 ### **Useful function**
 
@@ -510,34 +553,3 @@ def Transition(fa_info):
 #permet de ranger en ordre croissant une chaine de caractère de chiffre (ex: "6954" deviens "4569")
 def Sortstring(word):
     return "".join(list(map(str,sorted(list(map(int,list(word)))))))
-
-def complementary_automaton (fa_info):
-    nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
-    new_nb_terminal = nb_states - nb_terminal
-    new_pos_terminal = []
-    for state in range(nb_states):
-        if state not in pos_terminal:
-            new_pos_terminal.append(state)
-    return nb_letters, nb_states, nb_entry, pos_entry, new_nb_terminal, new_pos_terminal, nb_transitions, list_transitions
-
-### **Usage**
-'''file = "./automatas/31.txt"
-fa_info = get_info(read_fa(file))
-standardized_fa_info = standardization(fa_info)
-table = create_fa_table(fa_info)
-standardized_table = create_fa_table(standardized_fa_info)
-
-determinized_fa_info = determiniaztion(fa_info)
-table_determinized = create_fa_table(determinized_fa_info)
-
-new_table = create_fa_table(complementary_automaton(fa_info))
-
-print_fa_info(file)
-print_fa_table(table)
-print_fa_table(new_table)
-print_fa_status(fa_info)
-print_fa_table(table_determinized)
-
-print_fa_table(standardized_table)
-test_recognize_word(fa_info)
-'''

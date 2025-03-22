@@ -44,7 +44,8 @@ def main_menu():
             print("5. Determinize and/or complete automaton") #need to modified with complete function
             print("6. Minimize automaton") #need to modified with complete function
             print("7. Test word recognition")
-            print("8. Choose another FA")
+            print("8. Test word recognition on the complementary automaton")
+            print("9. Choose another FA")
             print("0. Exit")
             choice = input("Enter your choice : ")
 
@@ -71,6 +72,8 @@ def main_menu():
             elif choice == "7":
                 test_recognize_word(fa_info)
             elif choice == "8":
+                complementary(fa_info)
+            elif choice == "9":
                 break
             elif choice == "0":
                 return
@@ -78,4 +81,4 @@ def main_menu():
                 print("Invalid option.")
 
 if __name__ == "__main__":
-    main_menu()
+    main_menu() 
