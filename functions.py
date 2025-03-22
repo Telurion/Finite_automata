@@ -403,18 +403,20 @@ def recognize_word(fa_info, word):
 
 
 def test_recognize_word(fa_info):
-    print("\n Type a word to test (or type 'end') :")
-
+    #loop to test word recognition
+    print("\nType a word to test (or 'end') :")
     while True:
-        word = input() # read the word
+        try:
+            word = input("> ")
+        except KeyboardInterrupt:  #like ctrl + C   
+            print("\nInterruption")
+            break
         if word.lower() == "end":
             break
-
         if recognize_word(fa_info, word):
-            print(f"Yes, '{word}' is recognizable by the automata")
+            print(f"YES, '{word}' is recognize by the automata")
         else:
-            print(f"No, '{word}' is not recognizable by the automata")
-
+            print(f"NO, the word '{word}' is not recognize by the automata")
 
 
 ### **Useful function**
@@ -468,7 +470,7 @@ def Sortstring(word):
     return "".join(list(map(str,sorted(list(map(int,list(word)))))))
 
 ### **Usage**
-file = "./automatas/39.txt"
+"""file = "./automatas/39.txt"
 fa_info = get_info(read_fa(file))
 standardized_fa_info = standardization(fa_info)
 table = create_fa_table(fa_info)
@@ -479,4 +481,4 @@ print_fa_table(table)
 print_fa_status(fa_info)
 
 print_fa_table(standardized_table)
-test_recognize_word(fa_info)
+test_recognize_word(fa_info)"""
