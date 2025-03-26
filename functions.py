@@ -1,5 +1,7 @@
 from os import walk
 from prettytable import PrettyTable 
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 figures = [str(i) for i in range(10)]
@@ -13,7 +15,7 @@ def keep_right_file(fileslist) :
     return fileslist
 
 def read_fa(file) :
-    f = open(file, "r")
+    f = open(file, "r", encoding="utf-8")
     informations = []
     for i in f:
         informations.append(i.replace('\n', ''))
@@ -103,43 +105,82 @@ def print_fa_table(table):
     print("-" * 40)
 
 
-
 ### **Checking FA Properties**
 def is_deterministic(fa_info):
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
     set_transitions = set(list_transitions)
 
+    states = States(fa_info)
+    letters = Letters(fa_info)
+
+    
+    determinize = True
+
     if len(set_transitions) != nb_transitions:
         print("Some of your transition are multiple times in the file")
 
-    for state in range(nb_states):
-        determinize = True
-        for letter in range(nb_letters):
-            transition_count = sum(1 for transition in list_transitions if transition[0] == str(state) and transition[1] == alphabet[letter])
+    if nb_entry > 1:
+        print(f"Not deterministic : There are {nb_entry} entries : you must have a unique entry.")
+        return False
+
+    for state in states:
+        for letter in letters:
+            transition_count = 0
+            for transition in list_transitions :
+                placeOfLetter=1
+                while transition[placeOfLetter] in figures:
+                    placeOfLetter+=1
+                if transition[placeOfLetter] == letter and transition[:placeOfLetter] == str(state):
+                    transition_count += 1
             if transition_count > 1:
-                print(f"Not deterministic: State {state} has {transition_count} transitions on symbol '{alphabet[letter]}'.")
+                print(f"Not deterministic: State {state} has {transition_count} transitions on symbol '{letter}'.")
                 determinize = False
     return determinize
 
 def is_complete(fa_info):
     complete = True
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
-    for state in range(nb_states):
-        for letter in range(nb_letters):
-            if not any(transition[0] == str(state) and transition[1] == alphabet[letter] for transition in list_transitions):
-                print(f"Not complete: Missing transition from state {state} with letter '{alphabet[letter]}'")
+
+    states = []
+    letters = []
+    
+    states = States(fa_info)
+    letters = Letters(fa_info)
+
+    for state in states:
+        for letter in letters:
+            found = False
+            for transition in list_transitions:
+                placeOfLetter = 0
+                while transition[placeOfLetter] not in letters:
+                    placeOfLetter += 1
+                if transition[placeOfLetter] == letter and transition[:placeOfLetter] == str(state):
+                    found = True
+                    break
+            if not found:
+                print(f"Not complete: Missing transition from state {state} with letter '{letter}'")
                 complete = False
     return complete
 
 def check_standard(fa_info):
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
+    states = []
+    letters = []
+    states = States(fa_info)
+    letters = Letters(fa_info)
     state, temp = True, False
+
     if nb_entry > 1:
         print(f"Not standard : There are {nb_entry} entries : you must have a unique entry.")
         state = False
-    for i in range(nb_transitions):
-        if int(list_transitions[i][2]) in pos_entry:
+
+    for transition in list_transitions:
+        placeOfLetter = 0
+        while transition[placeOfLetter] not in letters:
+            placeOfLetter += 1
+        if int(transition[placeOfLetter + 1:]) in pos_entry:
             state, temp = False, True
+
     if temp:
         print("Not standard : There are some states that have a path leading to the entry state.")
     return state
@@ -180,14 +221,15 @@ def completion(fa_info):
     if not is_complete(fa_info):
         nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
         cplt_nb_states = 1+nb_states #rajout de l'état P
+        letters = Letters(fa_info)
         #creation d'une copie des transitions
         cplt_list_transitions = []
         cplt_nb_transitions = nb_transitions
         for i in list_transitions:
             cplt_list_transitions.append(i)
         #rajout de ses transitions (ex : PaP, PbP...)
-        for i in range(nb_letters):
-            transition = f"P{alphabet[i]}P"
+        for i in letters:
+            transition = f"P{i}P"
             cplt_list_transitions.append(transition)
             cplt_nb_transitions +=1
         #rajout des transitions incomplete
@@ -214,12 +256,12 @@ def determinization_and_completion(fa_info):
         print("your automata is already deterministic and complete")
     else:
         if is_deterministic(fa_info):
-            fa = completion(fa)
+            fa = completion(fa_info)
         if is_complete(fa_info):
             fa = determiniaztion(fa_info)
         else:
             fa = determiniaztion(fa_info)
-            fa = completion(fa)
+            fa = completion(fa_info)
     return fa
             
 
@@ -376,46 +418,91 @@ def minimization(cdfa_info):
     return final_partition
 
 
+def epsilon_closure(states, list_transitions, letters):
+    """ Returns the set of all states reachable from 'states' using only epsilon transitions. """
+    closure = set(states)
+    stack = list(states)  # Stack for DFS traversal
 
+    while stack:
+        state = stack.pop()
+        for transition in list_transitions:
+            placeOfLetter = 0
+            while transition[placeOfLetter] not in letters:
+                placeOfLetter += 1
+            source_state = transition[:placeOfLetter]
+            letter = transition[placeOfLetter]
+            dest_state = transition[placeOfLetter + 1:]
+
+            if source_state in closure and letter == 'ε' and dest_state not in closure:
+                closure.add(dest_state)
+                stack.append(dest_state)
+
+    return closure
 
 
 def recognize_word(fa_info, word):
- 
     nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
 
-    # Convert current states -> into strings
-    current_states = [str(state) for state in pos_entry]
+    states = States(fa_info)
+    letters = Letters(fa_info)
 
-    # Travel the word
+    current_states = set(str(state) for state in pos_entry)
+    current_states = epsilon_closure(current_states, list_transitions, letters)
+
     for letter in word:
-        next_states = []
+        next_states = set()
         for state in current_states:
             for transition in list_transitions:
-                if transition[0] == state and transition[1] == letter:
-                    if transition[2:] not in next_states:
-                        next_states.append(transition[2:])  
-        if not next_states:
+                placeOfLetter = 0
+                while transition[placeOfLetter] not in letters:
+                    placeOfLetter += 1
+                source_state = transition[:placeOfLetter]
+                transition_letter = transition[placeOfLetter]
+                dest_state = transition[placeOfLetter + 1:]
+
+                if transition_letter == letter and source_state in current_states:
+                    next_states.add(dest_state)
+
+        if not next_states: 
             return False
 
-        current_states = next_states
-    #check if final states
-    return any(state in [str(s) for s in pos_terminal] for state in current_states)
+        current_states = epsilon_closure(next_states, list_transitions, letters)
+    return any(state in map(str, pos_terminal) for state in current_states)
 
 
 def test_recognize_word(fa_info):
     print("\n Type a word to test (or type 'end') :")
 
     while True:
-        word = input() # read the word
-        if word.lower() == "end":
+        try:
+            word = input("> ")
+        except KeyboardInterrupt:  #like ctrl + C   
+            print("\nInterruption")
             break
 
         if recognize_word(fa_info, word):
-            print(f"Yes, '{word}' is recognizable by the automata")
+            print(f"YES, '{word}' is recognizable by the automata")
         else:
-            print(f"No, '{word}' is not recognizable by the automata")
+            print(f"NO '{word}' is not recognizable by the automata")
 
+def complementary_automaton(fa_info):
+    nb_letters, nb_states, nb_entry, pos_entry, nb_terminal, pos_terminal, nb_transitions, list_transitions = fa_info
+    new_nb_terminal = nb_states - nb_terminal
+    new_pos_terminal = []
+    for state in range(nb_states):
+        if state not in pos_terminal:
+            new_pos_terminal.append(state)
+    return nb_letters, nb_states, nb_entry, pos_entry, new_nb_terminal, new_pos_terminal, nb_transitions, list_transitions
 
+def complementary(fa_info):
+    new_fa_info = complementary_automaton(fa_info)
+    table = create_fa_table(new_fa_info)
+    print_fa_table(table)
+
+    try:
+        test_recognize_word(new_fa_info)
+    except:
+        pass
 
 ### **Useful function**
 
@@ -466,17 +553,3 @@ def Transition(fa_info):
 #permet de ranger en ordre croissant une chaine de caractère de chiffre (ex: "6954" deviens "4569")
 def Sortstring(word):
     return "".join(list(map(str,sorted(list(map(int,list(word)))))))
-
-### **Usage**
-file = "./automatas/39.txt"
-fa_info = get_info(read_fa(file))
-standardized_fa_info = standardization(fa_info)
-table = create_fa_table(fa_info)
-standardized_table = create_fa_table(standardized_fa_info)
-
-print_fa_info(file)
-print_fa_table(table)
-print_fa_status(fa_info)
-
-print_fa_table(standardized_table)
-test_recognize_word(fa_info)
