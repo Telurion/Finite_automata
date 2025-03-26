@@ -63,7 +63,8 @@ def main_menu():
             elif choice == "5":
                 fa_info = determinization_and_completion(fa_info)
                 print("Now the automaton is determinized and completed.")
-                print_fa_table(create_fa_table(fa_info))
+                table = create_fa_table(fa_info)
+                print_fa_table(table)
             elif choice == "6":
                 print("Minimization result : ")
                 partitions = minimization(fa_info)

@@ -246,14 +246,15 @@ def completion(fa_info):
         for transition in cplt_list_transitions:
             print(f"  - {transition}")
         print("-" * 40)
-        cplt_fa_info = (nb_letters,cplt_nb_states,nb_entry,pos_entry,nb_terminal,pos_terminal,cplt_nb_transitions,cplt_list_transitions)
-        return tuple(cplt_fa_info)
+        cplt_fa_info = nb_letters,cplt_nb_states,nb_entry,pos_entry,nb_terminal,pos_terminal,cplt_nb_transitions,cplt_list_transitions
+        return cplt_fa_info
     else :
         print("your table is already completed ^^")
 
 def determinization_and_completion(fa_info):
     if is_complete(fa_info) and is_deterministic(fa_info):
         print("your automata is already deterministic and complete")
+        return fa_info
     else:
         if is_deterministic(fa_info):
             fa = completion(fa_info)
@@ -262,7 +263,7 @@ def determinization_and_completion(fa_info):
         else:
             fa = determiniaztion(fa_info)
             fa = completion(fa_info)
-    return fa
+        return fa
             
 
 def determiniaztion(fa_info):
@@ -343,7 +344,7 @@ def determiniaztion(fa_info):
         determinized_fa_info[-2] = len(new_list_transitions) #redefine the number of transition
         determinized_fa_info[-1] = new_list_transitions #redefine the transitions
 
-        return tuple(determinized_fa_info)
+        return determinized_fa_info
     else:
         return fa_info
 
@@ -369,7 +370,7 @@ def minimization(cdfa_info):
     nt = []
 
     # filling of the terminal and non-terminal lists
-    for state in nb_states:
+    for state in range(nb_states):
         if str(state) in map(str, pos_terminal):
             t.append(state)
         else:
