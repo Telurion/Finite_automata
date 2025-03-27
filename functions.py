@@ -87,7 +87,7 @@ def create_fa_table(fa_info):
         for letter in letters:
             temp=[]
             for transition in list_transitions:
-                placeOfLetter=0
+                placeOfLetter=1
                 while transition[placeOfLetter] not in letters:
                     placeOfLetter+=1
                 if transition[placeOfLetter] == letter and transition[:placeOfLetter] == state:
@@ -151,7 +151,7 @@ def is_complete(fa_info):
         for letter in letters:
             found = False
             for transition in list_transitions:
-                placeOfLetter = 0
+                placeOfLetter = 1
                 while transition[placeOfLetter] not in letters:
                     placeOfLetter += 1
                 if transition[placeOfLetter] == letter and transition[:placeOfLetter] == str(state):
